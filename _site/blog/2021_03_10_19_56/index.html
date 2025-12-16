@@ -1,0 +1,92 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2021/03/10 19:56</p>
+  <hr>
+  <h2 class="post-title">Powershellをいい感じに設定する</h2>
+</div>
+
+<div class="post-main">
+
+  <p>Powershellにおいて、.zshrcや.bashrcにあたるのがprofile.ps1。
+echo $PROFILEにどこのパスに設定ファイルを置けばいいか書いてある。
+自分の場合はC:\Users\Name\OneDrive\ドキュメント\PowerShell\Microsoft.PowerShell_profile.ps1だった。
+profile.ps1に以下を書いた。</p>
+<pre><code class="language-ps1">Set-PSReadLineOption -EditMode Emacs -BellStyle None
+Set-PSReadLineKeyHandler -Chord Ctrl+d -Function DeleteChar
+Set-PSReadlineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadlineKeyHandler -Key DownArrow -Function HistorySearchForward
+Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
+function prompt {
+  &quot;$($pwd.path)`n&gt; &quot;
+}
+
+Set-Alias v gvim
+
+</code></pre>
+<hr>
+<p>Emacsキーバインドが使える。Windowsのコマンドラインで使えるなんて感動すら覚える。</p>
+<pre><code class="language-ps1">Set-PSReadLineOption -EditMode Emacs -BellStyle None
+
+</code></pre>
+<p>デフォルトのEmacsキーバインドそのままだとC-dがDeleteCharOrExitになっていて、空文字をC-dするとプロセスをexitする。そこをなしに。</p>
+<pre><code class="language-ps1">Set-PSReadLineKeyHandler -Chord Ctrl+d -Function DeleteChar
+
+</code></pre>
+<p>コマンド入力履歴を上下で辿るときにすでに入力している文字にマッチする履歴のみを辿る。zshっぽい。</p>
+<pre><code class="language-ps1">Set-PSReadlineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadlineKeyHandler -Key DownArrow -Function HistorySearchForward
+
+</code></pre>
+<p>既に入力している文字から補完候補一覧を表示して、その中から選択するような形で補完できる。zshっぽい。</p>
+<pre><code class="language-ps1">Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
+
+</code></pre>
+<p>プロンプト設定。色も付けられる。</p>
+<pre><code class="language-ps1">function prompt {
+  #&quot;$($pwd.path)`n&gt; &quot;
+  &quot;`e[34m$($pwd.path)`e[0m`n&gt; &quot;
+}
+
+</code></pre>
+<p>いまだにvscodeに乗り換えられないの良くないのかもしれない。</p>
+<pre><code class="language-ps1">Set-Alias v gvim
+
+</code></pre>
+<p>これだけ設定するだけで十分に使えるようになった。</p>
+
+
+</div>

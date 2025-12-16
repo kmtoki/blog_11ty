@@ -1,0 +1,21 @@
+{
+  "name": "blog_11ty",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "@11ty/eleventy": "^3.1.2",
+    "escape-html": "^1.0.3",
+    "fs": "^0.0.1-security",
+    "gray-matter": "^4.0.3",
+    "https": "^1.0.0",
+    "process": "^0.11.10"
+  }
+}

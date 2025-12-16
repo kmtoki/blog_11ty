@@ -1,0 +1,58 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/無し">無し</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2020/07/29 16:53</p>
+  <hr>
+  <h2 class="post-title">Bluetoothドングルの設定</h2>
+</div>
+
+<div class="post-main">
+
+  <p>Windows10のXPS8930を使っていて、内蔵のBluetoothチップがポンコツだったのでUSBのBluetoothドングルを使ってみたら改善した。</p>
+<p>これ、<a href="https://www.elecom.co.jp/products/LBT-UAN05C2.html">LBT-UAN05C2</a></p>
+<p>。
+ただ、設定でめちゃんこハマったのでメモ。</p>
+<ol>
+<li>BLEドングルは抜いておく</li>
+<li>BLEドングルのドライバーはアンインストール</li>
+<li>デバイスマネージャーで既存のBluetoothドライバーを無効にする。うちの場合は&quot;Qualcomm QCA9377 Bluetooth&quot;をオフ</li>
+<li>ドングルをぶっさす</li>
+<li>平和</li>
+</ol>
+<p>Windowsアップデートなどで内蔵BLEデバイスが再びオンになって、突然BLEドングルが反応しなくなったりする。Generic Bluetooth Radioがエラーになっていれば、アンインストールして、ドングル抜いて、内蔵BLデバイスドライバーを無効にしてから、ドングルぶっさすとドライバー諸々がデバイスマネージャーから新たに確認できる。場合によってはマウスなどのデバイスを削除して、ペアリングをし直さなければならなかったりする。しょうもない所でハマるの勘弁して。</p>
+
+
+</div>

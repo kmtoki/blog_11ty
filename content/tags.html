@@ -1,0 +1,14 @@
+---
+pagination:
+  data: collections
+  size: 1
+  alias: tag
+permalink: "/blog/tag/{{ tag }}/"
+---
+
+{% render "base.html" %}
+
+{% render "tag_list.html" with tag as tags %}
+
+{% assign posts = collections[tag] | reverse %}
+{% render "post_list.html" with posts  as posts %}

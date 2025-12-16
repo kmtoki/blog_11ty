@@ -1,0 +1,151 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2022/07/04 09:33</p>
+  <hr>
+  <h2 class="post-title">Monad/MonadState/MonadTrans/MonadIOのinstanceを定義する</h2>
+</div>
+
+<div class="post-main">
+
+  <pre><code class="language-haskell">{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+data InnerState = InnerState { _y :: Int }
+newtype Inner m a = Inner { runInner :: StateT InnerState m a }
+  deriving (Functor,Applicative,Monad,MonadState InnerState,MonadTrans,MonadIO)
+
+data AppState = AppState { _x :: Int }
+newtype App m a = App { runApp :: StateT AppState m a }
+  deriving (Functor,Applicative,Monad,MonadState AppState,MonadTrans,MonadIO)
+</code></pre>
+<p>GeneralizedNewtypeDerivingに任せれば良い。以下経緯。</p>
+<hr>
+<pre><code class="language-haskell">data InnerState = InnerState { _y :: Int }
+type Inner m a = StateT InnerState m a
+
+data AppState = AppState { _x :: Int }
+type App m a = StateT AppState (StateT InnerState m a) a
+
+makeLenses ''InnerState
+makeLenses ''AppState
+
+app :: App IO ()
+app = do
+  x += 1
+  x' &lt;- use x 
+  y' &lt;- lift $ do
+    y += 1
+    use y
+  liftIO $ print (x',y')
+</code></pre>
+<p>みたいなことをやりたいとして、とりあえず動くわけだがMonadスタックが深くなってくるとtypeの書き方が気になってくる。</p>
+<pre><code class="language-haskell">type App m a = 
+  StateT AppState (StateT InnerState (StateT InnerState2 (StateT InnerState3 (StateT InnerState4)))) a
+</code></pre>
+<p>このデータ構造の設計がそもそも悪いのではないかと言われればそうなんだが、まぁごりごりやっていくとこう成り果ててしまうこともある。それはそれとして。こういう場合にtypeの書き方を以下のように短くしたい。</p>
+<pre><code class="language-haskell">type Inner m a = StateT InnerState m a
+type Inner2 m a = StateT InnerState2 m a
+type Inner3 m a = StateT InnerState3 m a
+type Inner4 m a = StateT InnerState4 m a
+type App m2 a = StateT AppState (Inner (Inner2 (Inner3 (Inner4 m)))) a
+</code></pre>
+<p>しかし、</p>
+<pre><code class="language-haskell">--  • The type synonym ‘Inner’ should have 2 arguments, but has been given 1
+--  • In the type synonym declaration for ‘App’
+--
+--  | type App m2 a = 
+--  |   StateT AppState (Inner (Inner2 (Inner3 (Inner4 m)))) a
+</code></pre>
+<p>と怒られる。typeではうまくいかないようだ。そこでtypeをnewtypeにすると、</p>
+<pre><code class="language-haskell">newtype Inner m a =  Inner  { runInner  :: StateT InnerState m a }
+newtype Inner2 m a = Inner2 { runInner2 :: StateT InnerState2 m a }
+newtype Inner3 m a = Inner3 { runInner3 :: StateT InnerState3 m a }
+newtype Inner4 m a = Inner4 { runInner4 :: StateT InnerState4 m a }
+newtype App m a = App {
+    runApp :: StateT AppState (Inner (Inner2 (Inner3 (Inner4 m)))) a
+  }
+</code></pre>
+<p>部分的には解決しそうだが、</p>
+<pre><code class="language-haskell">--  • No instance for (Monad (App IO)) arising from a do statement
+--  • No instance for (MonadState AppState (App IO))
+--  • No instance for (MonadTrans App) arising from a use of ‘lift’
+--  • No instance for (MonadState InnerState IO)
+--  • No instance for (MonadIO (App IO)) arising from a use of ‘liftIO’
+</code></pre>
+<p>と怒られる。こんどはMonad系のinstanceがないぞと。こちらとしてはただの<code>StateT HogeState m a</code>のエイリアスみたいなノリで使いたいだけなのに自分で定義する必要があるらしい。</p>
+<pre><code class="language-haskell">{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- Inner[2,3,4]は省略
+newtype Inner m a = Inner { runInner :: StateT InnerState m a }
+  deriving (Functor,Applicative,Monad,MonadState InnerState,MonadIO,MonadTrans)
+
+newtype App m a = App { runApp :: StateT AppState m a }
+  deriving (Functor,Applicative,Monad,MonadState AppState,MonadIO,MonadTrans)
+</code></pre>
+<p>GNDのderivingが全部やってくれる。最初は以下のように手で書いていたがそんな必要はなくて俺はなにやってたんだ状態になったのでした。最初にGNDを試して駄目だった気がしたのは気のせいだったのだろう。</p>
+<pre><code class="language-haskell">newtype Inner m a = Inner { runInner :: StateT InnerState m a }
+  deriving (Functor,Applicative,Monad)
+
+newtype App m a = App { runApp :: StateT AppState m a }
+  deriving (Functor,Applicative,Monad)
+
+instance Monad m =&gt; MonadState InnerState (Inner m) where
+  get = Inner get
+  put = Inner . put
+
+instance Monad m =&gt; MonadState AppState (App m) where
+  get = App get
+  put = App . put
+
+instance MonadTrans App where
+  lift m = App $ StateT $ \s -&gt; do
+    a &lt;- m
+    pure (a,s)
+
+instance MonadTrans Inner where
+  lift m = Inner $ StateT $ \s -&gt; do
+    a &lt;- m
+    pure (a,s)
+
+instance MonadIO m =&gt; MonadIO (App m) where
+  liftIO = lift . liftIO
+
+instance MonadIO m =&gt; MonadIO (Inner m) where
+  liftIO = lift . liftIO
+</code></pre>
+
+
+</div>

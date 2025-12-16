@@ -1,0 +1,16 @@
+---
+permalink: "/blog/"
+---
+{% render "base.html" %}
+
+{% assign tags = collections | getTagNames %}
+{% render "tag_list.html" with tags as tags %}
+
+{% assign posts = collections.all | reverse | slice: 0, 9 %}
+{% render "post_list.html" with posts as posts %}
+
+
+<hr>
+<div class="pages">
+  <h2><a href="/blog/pages/0">Pages</a></h2>
+</div>

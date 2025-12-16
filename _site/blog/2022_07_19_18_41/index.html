@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2022/07/19 18:41</p>
+  <hr>
+  <h2 class="post-title">QMKにNICOLA配列でも設定するか</h2>
+</div>
+
+<div class="post-main">
+
+  <p><a href="https://github.com/kmtoki/dotfile/tree/master/keymap">keymap</a></p>
+<p>PreonicのQMKに定義してみた。一年ほど前に。キーマップ書いて一切練習してなかったのを思い出してちょっとやってみるかっと思ってファームウェア書き込んだら、修飾キーあたりが動かんくてなるほど、それで練習しなかったのかとなっとく。調べてみたもののこれでいいはずなんだけどなーってやつが思い通り動いてくれないので、NICOLAモード中にAltやCtrlを使えないという雑な作りでもういいや状態になってしまった。</p>
+<hr>
+<p>とかなんとか書いていて、ふと思いついた修正をいれてみたら直ったぞ。まぁよかった。</p>
+<p><a href="https://github.com/qmk/qmk_firmware/blob/master/docs/feature_unicode.md">Unicode Support</a></p>
+<p>話を戻して、<code>rules.mk</code>に<code>UNICODEMAP_ENABLE = yes</code>としてUnicodeMapをわーと日本語の定義を書いて、ってこれぜったいどっかにあるだろ。自分で書くなよ。と思いつつも書いて。NICOLA配列もわーとならべて。いくぜーとフラッシュしても全然文字化けしてて。えーと思いつつぐぐると設定がもうひとつたりてなくて。UnicodeのInputModeを指定する必要があるらしく、しかしWindowsのビルドインメソッドはおすすめしないよと書いてあって、代わりに書いてあったのが、<a href="https://github.com/samhocevar/wincompose">WinCompose</a>というアプリを使えと。それインスコして、<code>matrix_init_user</code>に<code>set_unicode_input_mode(UC_WINC)</code>を追加しておつかれさまでした。</p>
+
+
+</div>

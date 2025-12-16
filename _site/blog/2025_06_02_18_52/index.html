@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2025/06/02 18:52</p>
+  <hr>
+  <h2 class="post-title">N分、N文字</h2>
+</div>
+
+<div class="post-main">
+
+  <p>最近の日記の末尾に書いている<code>（N分、N文字）</code>は適当になんとなくで計算して書いているので、それをコマンド一発で入力できるようにした。</p>
+<pre><code class="language-vimscirpt">inoremap &lt;F3&gt; &lt;ESC&gt;:InsertElapsedTimeTextSize&lt;CR&gt;
+
+command! InsertElapsedTimeTextSize call InsertElapsedTimeTextSize()
+function InsertElapsedTimeTextSize()
+  let l:path = expand(&quot;%:f&quot;)
+  let l:sec = system([&quot;ruby&quot;, &quot;-e&quot;, &quot;print (Time.now - ARGF.file.birthtime).round / 60&quot;, l:path])
+  let l:size = system([&quot;ruby&quot;, &quot;-e&quot;, &quot;print readlines(nil)[0].size&quot;, l:path])
+  let l:info = printf(&quot;（%s分、%s文字）&quot;, sec, size)
+  execute &quot;:normal i&quot; . info
+endfunction
+</code></pre>
+<p>とやってできたなメモっとくかーでブログアップしようとしたら、このコマンドのエラーがでて草。rubyがそんなファイルねえよと言っているそんなばかな。</p>
+<p>なるほど。このブログファイルを保存する前にコマンドを実行するから、まだファイルが存在してなくてエラーになるのか。しかし保存をトリガーにVimがブログファイルをgit pushしてしまうので困ったな。ruby使うのを諦めてvimscriptでやるしかなさそう。おのれ。birthtimeをvimscriptで取得する方法がないらしいぞ。</p>
+<p>というわけで、ブログファイルのヘッダーにテキストとしてかいてあるファイル作成時間を正規表現でバッファーから取得して計算したぞ。まぁ泥臭いがこれくらいでちょうどいいのだろう。vimscriptはわからんからchatGPT先生に教えてもらいながら書いた。</p>
+<pre><code class="language-vimscript">function BlogInsertElapsedTimeTextSize()
+  let l:time = matchstr(getline(2), '\d\+:\d\+')
+  let l:ts = split(time, &quot;:&quot;)
+  let l:birth = str2nr(l:ts[0]) * 60 + str2nr(l:ts[1])
+  let l:ts = split(strftime(&quot;%X&quot;, localtime()), &quot;:&quot;)
+  let l:now = str2nr(l:ts[0]) * 60 + str2nr(l:ts[1])
+  let l:size = GetTotalUtf8CharCount()
+  let l:info = printf(&quot;（%d分、 %d文字）&quot;, (l:now - l:birth), l:size)
+  execute &quot;:normal i&quot; . l:info
+endfunction
+
+function! GetTotalUtf8CharCount()
+  let total_chars = 0
+  let num_lines = line('$') &quot; バッファの最終行番号を取得
+
+  for i in range(1, num_lines)
+    let line_content = getline(i)
+    let total_chars += len(line_content)
+  endfor
+
+  return total_chars
+endfunction
+</code></pre>
+<p>（126分、 2421文字）</p>
+
+
+</div>

@@ -1,0 +1,73 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/PC">PC</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2023/01/22 18:22</p>
+  <hr>
+  <h2 class="post-title">TUF GAMING X670E-PLUSでRyzen 7950xをEco modeに設定する</h2>
+</div>
+
+<div class="post-main">
+
+  <p>ASUS TUF GAMING X670E-PLUSを使っていてRyzen MasterにEco modeボタンがない問題に遭遇。ぐぐるとあるあるらしい。PBOが有効になっていないとRyzen MasterにEcoボタンが表示されないらしく、BIOSから設定。AiTweakerとAdvancedの項目にPBOを設定するところがありどちらともEnableにして再起動。そしたらRyzen Masterに表示されない。なんでや。Ryzen Master経由は諦め、直接BIOSに数値を入力した。AiTweakerの方では数値がなぜか打ち込めないのでAdvancedの方に打ち込んだ。このマザボではmW単位で数値入力する。<a href="https://www.youtube.com/watch?v=OvfkEDFNv6Q&amp;t=9s">おじさんの動画</a>を参考にMSIのマザボに用意されている数値をぽちぽち。MSIのプリセットにある65wがEcoモード相当。結局バランス見ながら下のやつにした。MSIでいう105w。空冷でベンチ回しても70度位までしか上がらんからいい感じかな。</p>
+<ul>
+<li>
+<p>Eco mode/65w</p>
+</li>
+<li>
+<p>PPT: 88000</p>
+</li>
+<li>
+<p>TDC: 75000</p>
+</li>
+<li>
+<p>EDC: 150000</p>
+</li>
+<li>
+<p>105w</p>
+</li>
+<li>
+<p>PPT: 142000</p>
+</li>
+<li>
+<p>TDC: 110000</p>
+</li>
+<li>
+<p>EDC: 170000</p>
+</li>
+</ul>
+
+
+</div>

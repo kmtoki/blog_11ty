@@ -1,0 +1,12 @@
+<div class="tags-list">
+{% assign tags = tags | reverse %}
+{% for tag in tags %}
+  {% if tag == "all" %}
+    <a class="tags-list-elem" href="/blog/tag/{{tag}}">すべて</a>
+  {% else %}
+    <a class="tags-list-elem" href="/blog/tag/{{tag}}">{{tag}}</a>
+  {% endif %}
+{% endfor %}
+</div>
+
+

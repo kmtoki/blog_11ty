@@ -1,0 +1,295 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2024/01/26 20:35</p>
+  <hr>
+  <h2 class="post-title">haskellでゲームボーイのCPUエミュレータを書いた</h2>
+</div>
+
+<div class="post-main">
+
+  <p>一昨年の夏にどうやってもテスト通らなくて放置してたゲームボーイエミュレータを根本的に書き換えてみたらだいぶましになった。最初はlens/Stateを使う方針でCPUのレジスタなんかをレコードのフィールドにぶち込んでそれらを書き換えていく感じだったが、ざっと書いたところでひどく遅くかなしくなった。今回はレジスタなどの本質的にミュータブルなデータを全部Vector.Unboxed.Mutableにぶちこんだら早くなったという話。そりゃそうなんよ。</p>
+<p>lens/StateMでできるだけイミュータブルなレコード更新をしようとした型設計。</p>
+<pre><code class="language-haskell">type CPU a = StateT CPUState (StateT MBCState (StateT LoggerState IO)) a
+data CPUState = CPUState {
+    _a, __f, _b, _c, _d, _e, _h, _l :: Word8,
+    _sp, _pc :: Word16,
+    ...
+  } deriving Show
+
+makeLenses ''CPUState
+</code></pre>
+<p>フラグ更新などはFレジスタに詰め込まれているのでlens関数を用いてアクセサーを書ける</p>
+<pre><code class="language-haskell">carry :: Lens' CPUState Bool
+carry = lens get set
+  where
+    get c = testBit (__f c) 4
+    set c b =
+      if b then
+        c { __f = setBit (__f c) 4 }
+      else
+        c { __f = clearBit (__f c) 4 }
+</code></pre>
+<p>命令の実装などはStateをつかうことで、たとえばrustの実装と比べるとselfをまるっと省略ができている。それでありながら動的言語の様な記法でもある。一方で変数名にcarryやhalfもしくは省略してcとhを使いたかったが、フラグとレジスタのアクセサーと名前がかぶるので使えないあたりが不便なところ。名前空間。</p>
+<pre><code class="language-haskell">add :: OP -&gt; CPU ()
+add op = do
+  (a', c', h') &lt;- add8CarryHalf &lt;$&gt; use a &lt;*&gt; readOP8 op
+  a .= a'
+  zero .= (a' == 0)
+  negative .= False
+  half .= h'
+  carry .= c'
+</code></pre>
+<pre><code class="language-rust">fn add(&amp;mut self, op: OP)  {
+    let (a, carry, half) = self.a.add_carry_half(self.load8(op));
+    self.a = a;
+    self.set_carry(carry);
+    self.set_half(half);
+    self.set_negative(false);
+    self.set_zero(self.a == 0);
+}
+</code></pre>
+<p>上記のhaskellの実装ではモナドスタックをつかっており、なかなかモナモナとネストしてるあたり、こんなんでいいのか感もいなめない。モナドトランスフォーマーの宿命である。バベルの塔のごとく積み上がるモナドスタックをどうにかしようという試みとしてEffectなるものがある。最近ではOCamlに公式に採用されたらしい。よくはしらんけど。そんなんでhaskellのeffect実装を調べた感じではいくつかあるものの比較的浅いスタックだとmtlより遅いらしいということで採用は見送った。</p>
+<p>そしてそのモナドスタックを潰しながら実行してく。</p>
+<pre><code class="language-haskell">type Gameboy a = StateT GameboyState IO a
+
+data GameboyState = GameboyState {
+    _cpu :: CPUState,
+    _mbc :: MBCState,
+    _logger :: LoggerState,
+    _car :: Cartrige
+  }
+
+makeLenses ''GameboyState
+
+stepGameboy :: GameboyState -&gt; IO GameboyState
+stepGameboy gb = do
+  let run = flip runStateT
+  (((_,cpu'),mbc'),logger') &lt;- run (gb^.logger) $ run (gb^.mbc) $ run (gb^.cpu) executeCPU
+  pure $ gb 
+    &amp; (cpu .~ cpu')
+    . (mbc .~ mbc')
+    . (logger .~ logger')
+</code></pre>
+<p><code>(((_,cpu'),mbc'),logger') &lt;- run (gb^.logger) $ run (gb^.mbc) $ run (gb^.cpu) executeCPU</code>という風にモナドスタックみを感じる。もうちょいましになりそうだけど。上記の様な実装ではゲームプレイはできない処理速度となった。一応StateとIORefとIOVectorを比べてStateが一番マシだったのでそれを採用したので、haskellでは無理なのかとかなしくなった。</p>
+<p>その実装をたまに思い出しては少し手を入れたりしていた。モナドスタックを潰してステートをフラットにしたりした。CPUの命令がGBモナドになるので微妙な開放感がある。3倍くらい早くなったがそれでもまだ遅かった。</p>
+<pre><code class="language-haskell">type GB a = StateT GBState IO a
+
+data GBState = GBState {
+  _cpu :: CPUState,
+  _mbc :: MBCState,
+  _logger :: LoggerState
+  }
+
+-- CPU.hs
+add :: OP -&gt; GB ()
+add op = do
+  (a', c', h') &lt;- add8CarryHalf &lt;$&gt; (use $ cpu.a) &lt;*&gt; readOP8 w
+  cpu %= 
+      (a .~ a')
+    . (zero .~ (a' == 0))
+    . (negative .~ False)
+    . (half .~ h')
+    . (carry .~ c')
+</code></pre>
+<p>そんなところで放置してたが今年の冬にrustで書いてみたら、あまりの実装のラクさと速さに余計にhaskellとはなんだったのかとかなしみをいっそう深めたのでもう一度haskell実装を考えてみることにした。最適化をすればC++並みの速度がでるとの記載をはるか昔に見たのを思い出しながら。</p>
+<p>IOVectorのベンチは取ったがUnboxedを失念していたのでUnboxedも見てみたところ、なんかよくわからんほどの差がでたので、なぜ忘れていたのかとさらにかなしくなった。haskellのデータはサンクと呼ばれる形で保持されている。一見ただのInt8であっても<code>data Int8 = I8# Int8#</code>というようにdata型になっている。これはヒープのポインターであり遅延評価のときなどに役立つクロージャのようなもの。しかし遅延評価の必要もないプリミティブなデータであればその様なラベルを省略して生のデータとして扱えるよねというのがUnboxedだ。ということで「もう状態全部Vector.Unboxed.Mutableにぶち込もう」となり、以下のようなデータ構造と命令の実装になった。</p>
+<pre><code class="language-haskell">newtype Store a = Store (MVector (PrimState IO) a)
+
+data CPU = CPU { 
+  mbc :: MBC,
+
+  regs8 :: Store Word8,
+  regs16 :: Store Word16,
+  ...
+  }
+
+data CPURegisters8 = A | F | B | C | D | E | H | L | IME | Halt | Cycle
+  deriving (Enum, Show, Eq)
+
+readReg8 :: CPU -&gt; CPURegisters8 -&gt; IO Word8
+readReg8 (CPU {..}) r = readStore regs8 $ fromEnum r
+
+writeReg8 :: CPU -&gt; CPURegisters8 -&gt; Word8 -&gt; IO ()
+writeReg8 (CPU {..}) r n = writeStore regs8 (fromEnum r) n
+
+readFlag :: CPU -&gt; CPUFlags -&gt; IO Bool
+readFlag cpu flag = do
+  f &lt;- readReg8 cpu F
+  pure $ testBit f $ 4 + fromEnum flag
+
+writeFlag :: CPU -&gt; CPUFlags -&gt; Bool -&gt; IO ()
+writeFlag cpu flag bool = do
+  f &lt;- readReg8 cpu F
+  let f' = (if bool then setBit else clearBit) f (4 + fromEnum flag)
+  writeReg8 cpu F $ f' .&amp;. 0b11110000
+
+
+add :: CPU -&gt; Op8 -&gt; IO ()
+add cpu op = do
+  (a, carry, half) &lt;- addCarryHalf &lt;$&gt; readReg8 cpu A &lt;*&gt; readOp8 cpu op
+  writeReg8 cpu A a
+  writeFlag cpu Carry carry
+  writeFlag cpu Half half
+  writeFlag cpu Negative False
+  writeFlag cpu Zero $ a == 0
+</code></pre>
+<p>StoreはただのVector.Unboxed.Mutableのラッパーである。CPURegistersをEnumのinstanceとすることでそのままVectorのインデックスとして扱える。速さを優先してlensもStateも使わなかったのですべての関数で明示的にそれらの状態を引き回す記述が増えている。こうなってくるとただのCよりめんどくさくて遅いCである気もしてくる。</p>
+<p>ただだいぶ早くなった。テスト用のROMを26000000CPUStepくらい回すとテストが終わる。rust版と一秒差くらいなら悪くないんじゃないかな。両方とも最適化の余地が全然あるとは思う。haskellではPPUなどを書いてないのでゲームプレイはできない。終わり。</p>
+<ul>
+<li><a href="https://github.com/kmtoki/gbe-hs/tree/main">gbe-hs</a></li>
+<li><a href="https://github.com/kmtoki/gbe-rs/tree/main">gbe-rs</a></li>
+<li><a href="https://github.com/retrio/gb-test-roms">gb-test-roms</a></li>
+</ul>
+<pre><code class="language-powershell"># 適当に端折ってます
+&gt; time { stack run -- .\rom\gb-test-roms\cpu_instrs\cpu_instrs.gb | Out-Default }
+cpu_instrs
+
+01:ok  02:ok  03:ok  04:ok  05:ok  06:ok  07:ok  08:ok  09:ok  10:ok  11:ok
+
+Passed all tests
+
+TotalSeconds      : 5.6943804
+
+
+&gt; time { cargo run --release .\rom\gb-test-roms\cpu_instrs\cpu_instrs.gb | Out-Default }
+cpu_instrs
+
+01:ok  02:ok  03:ok  04:ok  05:ok  06:ok  07:ok  08:ok  09:ok  10:ok  11:ok
+
+Passed all tests
+
+TotalSeconds      : 4.6624661
+
+</code></pre>
+<p>追記。rust版だけloggerがオンになってたのでオフにして計測し直した。約2.5秒に早くなった。</p>
+<pre><code>&gt; time { cargo run --release .\rom\gb-test-roms\cpu_instrs\cpu_instrs.gb | Out-Default }
+cpu_instrs
+
+01:ok  02:ok  03:ok  04:ok  05:ok  06:ok  07:ok  08:ok  09:ok  10:ok  11:ok
+
+Passed all tests
+
+TotalSeconds      : 2.16294
+</code></pre>
+<h3>動的にステートフルなトレイトオブジェクト</h3>
+<p>ゲームボーイにはMBCというコンポーネントがある。メモリとROM（ゲームソフト）にアクセスするためのもので16bitしかないメモリアドレス空間を拡張的に使うものだ。MBCにはいくつもの種類があり、微妙に実装が違う。どのMBCを使うかはを実行時に決まるので、ここで他言語におけるインターフェイスやトレイトオブジェクト的なものがほしいのだが、haskellには静的な型クラスしかない（ゆうてここあんま調べてなかったな。ふつうにData.Dynamicでいけるんかな）。そんなこんなでhaskellでもlens/Stateでステートフルなトレイトオブジェクトもどきを使った。</p>
+<pre><code class="language-haskell">type MBC a = StateT MBCState (StateT LoggerState IO) a
+
+data MBCState = MBCState {
+    _mbcnState :: MBCNState,
+    _memory :: Memory,
+    _reader :: Int -&gt; MBC Word8,
+    _writer :: Int -&gt; Word8 -&gt; MBC ()
+  }
+
+data MBCNState
+  = MBC0State
+  | MBC1State {
+    _bank :: Int,
+    _bank1 :: Int,
+    _bank2 :: Int,
+    _bankRAMX :: Int,
+    _enableRAMX :: Bool,
+    _bankingMode :: Bool
+  } 
+  deriving Show
+
+makeLenses ''MBCState
+makeLenses ''MBCNState
+
+newMBCState :: Cartrige -&gt; IO MBCState
+newMBCState car = do
+  _memory &lt;- newMemory car
+  pure $ MBCState { .. }
+  where
+    (_mbcnState, _reader, _writer) = case car^.mbcType of
+      MBC0 -&gt; (MBC0State, readMBC0, writeMBC0)
+      MBC1 -&gt; (MBC1State 0x4000 1 0 0 False False, readMBC1, writeMBC1)
+      _ -&gt; undefined
+</code></pre>
+<p>newするタイミングでROMに使われているMBCのタイプを読み取り実装と状態を選択するVTable的なやつ。</p>
+<pre><code class="language-haskell">readMBC1 :: Int -&gt; MBC Word8
+readMBC1 i
+  | 0 &lt;= i &amp;&amp; i &lt;= 0x3fff = (V.! i) &lt;$&gt; (use $ memory.cartrige.rom)
+
+  | 0x4000 &lt;= i &amp;&amp; i &lt;= 0x7fff = do
+    (Just b) &lt;- preuse $ mbcnState.bank
+    rom' &lt;- use $ memory.cartrige.rom
+    pure (rom' V.! (b .|. (i - 0x4000)))
+
+  | 0x8000 &lt;= i &amp;&amp; i &lt;= 0x9fff = do
+    ram' &lt;- use $ memory.ram
+    lift $ VM.read ram' i
+
+  | 0xa000 &lt;= i &amp;&amp; i &lt;= 0xbfff = do
+    ramx' &lt;- use $ memory.ramx
+    (Just b) &lt;- preuse $ mbcnState.bankRAMX
+    if b == 0 then do
+      ram' &lt;- use $ memory.ram
+      lift $ VM.read ram' i
+    else 
+      lift $ VM.read ramx' (b .|. (i - 0xa000))
+
+  | otherwise = do
+    ram' &lt;- use $ memory.ram
+    lift $ VM.read ram' i
+</code></pre>
+<p>preuseしてちゃんと自分のステートを引っ張ってこれる。しかしpreuseはおそらく毎回直和型を走査してデータを引っ張ってきているのでコストがかかる。newしたタイミングでそれは決定していて無駄な走査なので気になる点ではある。</p>
+<p>Vector.Unboxed.Mutableで書き直した版ではStore Word64にまとめて放り込んでいて、すべてのMBCTypeの関数で同じ型のMBCStateを引き回してる。readするたびMBCTypeを判別しているので良くない気がする。</p>
+<pre><code class="language-haskell">readMBC :: MBC -&gt; Word16 -&gt; IO Word8
+readMBC mbc@(MBC {..}) i = case mbcType cartridge of
+  MBC1 -&gt; readMBC1 mbc i
+  _ -&gt; error &quot;readMBC unimplement MBCType&quot;
+</code></pre>
+<h3>そういえば、zig</h3>
+<p>一昨年の夏、僕がhaskellに絶望していたころzigが流行っていたのでzigでも書いたのを思い出した。早すぎて意味がわからん。こんだけちがうとrust版もなんかおかしいな。</p>
+<ul>
+<li><a href="https://github.com/kmtoki/gbe-zig/tree/main">gbe-zig</a></li>
+</ul>
+<pre><code>&gt; time { zig build run -Drelease-fast -- .\rom\gb-test-roms\cpu_instrs\cpu_instrs.gb }
+Serial:
+cpu_instrs
+
+01:ok  02:ok  03:ok  04:ok  05:ok  06:ok  07:ok  08:ok  09:ok  10:ok  11:ok
+
+Passed all tests
+
+TotalSeconds      : 0.937751
+</code></pre>
+
+
+</div>

@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2022/06/17 16:55</p>
+  <hr>
+  <h2 class="post-title">WindowsTerminal/powershellでのstack/GHCの文字化け</h2>
+</div>
+
+<div class="post-main">
+
+  <ul>
+<li><code>&lt;stderr&gt;: commitAndReleaseBuffer: invalid argument (invalid character)</code>で動かないぞ</li>
+<li>文字コードが悪いらしいぞ</li>
+<li>chcp 65001でutf8にするぞ</li>
+<li>動くようになったけど文字化けするぞ</li>
+<li>powershellでエンコーディングの設定するぞ</li>
+<li>直ったぞ</li>
+</ul>
+<p>という話。</p>
+<hr>
+<pre><code>app\Main.hs:36:27: error:
+    &lt;stderr&gt;: commitAndReleaseBuffer: invalid argument (invalid character)
+</code></pre>
+<p>とかなんとか言われて動かない場合にターミナルの文字コードをUTF-8に変えようと、</p>
+<pre><code>chcp 65001
+</code></pre>
+<p>とするも、</p>
+<pre><code>app\Main.hs:27:8: error:
+    窶｢ No instance for (Control.Monad.Reader.Class.MonadReader GB IO)
+        arising from a use of 窶・iew窶・[0m
+    窶｢ In a stmt of a 'do' block: m &lt;- view mem
+      In the expression:
+        do m &lt;- view mem
+           pure 10
+      In an equation for 窶腕eadMem窶・
+          readMem
+            = do m &lt;- view mem
+                 pure 10
+   |
+27 |   m &lt;- view mem
+   |        ^^^^^^^^
+</code></pre>
+<p>みたいな感じで文字化けする場合、</p>
+<pre><code class="language-powershell">[System.Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(&quot;utf-8&quot;)
+[System.Console]::InputEncoding = [System.Text.Encoding]::GetEncoding(&quot;utf-8&quot;)
+$env:LESSCHARSET = &quot;utf-8&quot;
+</code></pre>
+<p>とやると、</p>
+<pre><code>app\Main.hs:27:8: error:
+    • No instance for (Control.Monad.Reader.Class.MonadReader GB IO)
+        arising from a use of ‘view’
+    • In a stmt of a 'do' block: m &lt;- view mem
+      In the expression:
+        do m &lt;- view mem
+           pure 10
+      In an equation for ‘readMem’:
+          readMem
+            = do m &lt;- view mem
+                 pure 10
+   |
+27 |   m &lt;- view mem
+   |        ^^^^^^^^
+</code></pre>
+<p>みたいな感じになっていい感じ。</p>
+
+
+</div>

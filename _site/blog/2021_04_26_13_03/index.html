@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2021/04/26 13:03</p>
+  <hr>
+  <h2 class="post-title">Vimで楽にBlogを書く</h2>
+</div>
+
+<div class="post-main">
+
+  <p>このブログは投稿をGithubにpushして公開になる。<br>
+流れとしては</p>
+<ul>
+<li>terminal開く</li>
+<li>cd $HOME/Github/blog</li>
+<li>vim開く</li>
+<li>e strftime(&quot;md/%Y_%m_%d_%H_%M.md&quot;)</li>
+<li>ブログヘッダーをyamlでtitle,date,categoryを書く</li>
+<li>中身書く</li>
+<li>保存してvim閉じる</li>
+<li>git add &amp;&amp; git commit &amp;&amp; git push</li>
+</ul>
+<p>この一連をVimrcにまとめたのが以下。楽になりました。</p>
+<pre><code class="language-vim">&quot; Blog 
+command! BlogNew call BlogNew()
+augroup Blog
+  autocmd!
+  autocmd BufWritePost $HOME/Github/blog/md/*.md call BlogUpload()
+augroup END
+
+function BlogNew()
+  let l:dir = $HOME . &quot;\\Github\\blog&quot;
+  let l:file = strftime(&quot;md\\%Y_%m_%d_%H_%M.md&quot;)
+  let l:header = &quot;---\ndate: &quot; . strftime(&quot;%Y/%m/%d %H:%M&quot;) . &quot;\ntitle: \ncategory: \n---\n&quot;
+  execute &quot;cd &quot; . l:dir
+  execute &quot;e &quot; . l:file
+  execute &quot;:normal i&quot; . l:header
+endfunction
+
+function BlogUpload()
+  let l:cmd = &quot;git add md/*.md &amp;&amp; git commit -m 'new md' &amp;&amp; git push&quot;
+  echo system(l:cmd)
+endfunction
+</code></pre>
+
+
+</div>

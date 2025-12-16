@@ -1,0 +1,24 @@
+---
+pagination:
+  data: collections.all
+  size: 30
+  alias: posts
+  reverse: true
+permalink: "/blog/pages/{{ pagination.pageNumber }}/"
+---
+
+{% render "base.html" %}
+
+{% assign tags = collections | getTagNames %}
+{% render "tag_list.html" with tags as tags %}
+
+{% render "post_list.html" with posts  as posts %}
+
+{% assign n = pagination.pageNumber %}
+<br>
+<div class="pages">
+  <h3><a href="{{ pagination.href.previous }}">前</a></h3>
+  <h3>{{ n }}</h3>
+  <h3><a href="{{ pagination.href.next }}">次</a></h3>
+</div>
+

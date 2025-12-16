@@ -1,0 +1,92 @@
+
+:root {
+  background: #f1f1f1;
+  font-family: Times New Roman,游明朝体,YuMincho,游明朝,Yu Mincho,serif;
+  font-size: 20;
+  color: #555555;
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+a {
+  color: #446688;
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+  gap: 2%;
+}
+
+.header-title {
+  color: #444444;
+}
+
+.header-icon {
+  align-self: center;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.header hr {
+  margin: 0 5%;
+}
+
+
+.content {
+}
+
+.post-list {
+  display: flex;
+  align-items: center;
+  gap: 1%;
+}
+
+.post-title {
+  color: #666666;
+  flex: 1 0;
+}
+
+.post-title a {
+  padding: 10px;
+  text-decoration: none; 
+  color: #666666;
+}
+
+.post-list hr {
+  margin: 0 3%;
+  flex: 0 0;
+}
+
+.post-date {
+  color: #888888;
+  flex: 0 0;
+  flex-basis: max-content;
+}
+
+.tags-list {
+  margin: 7%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1%;
+}
+
+.tags-list-elem {
+  writing-mode: vertical-rl;
+  text-decoration: none;
+  color: #666666;
+}
+
+.pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10%;
+}
+
+.pages a {
+  text-decoration: none;
+  color: #666666;
+}

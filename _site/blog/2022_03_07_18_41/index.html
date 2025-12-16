@@ -1,0 +1,78 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2022/03/07 18:41</p>
+  <hr>
+  <h2 class="post-title">たなこふ先生のRustでGBE</h2>
+</div>
+
+<div class="post-main">
+
+  <p><a href="https://zenn.dev/tanakh/articles/gb-emulator-in-rust">Rustでゲームボーイエミュレーターを書いた</a></p>
+<p>僕は最初、Rustで書こうとしたが所有権のあれこれをクリアできず挫折した。
+メモリを<code>Rc&lt;RefCell&lt;Memory&gt;</code>とかでごまかそうとしたけど、さすがにあかんやろて思った。
+<code>Rc&lt;RefCell&lt;&gt;&gt;</code>のオーバーヘッドがどれくらいなのか知らんけど、メモリアクセス毎に<code>memory.borrow()[addr];borrow_mut()[addr] += 1</code>ではむりがあるよなぁと詰んでた。</p>
+<pre><code class="language-rust">struct MBC {
+  ram: RefCell&lt;Vec&lt;u8&gt;&gt;
+}
+
+struct CPU {
+  mbc: Rc&lt;MBC&gt;
+}
+
+struct PPU {
+  mbc: Rc&lt;MBC&gt;
+}
+</code></pre>
+<p>こんなかんじで、CPUとPPUからメモリにアクセスしたいと考えていたので構造体に組み込んでいたわけだけど、これじゃだめで</p>
+<pre><code class="language-rust">
+impl Gameboy {
+  mbc: MBC;
+  cpu: CPU;
+  ppu: PPU;
+
+  fn exec(&amp;self) {
+    self.cpu.exec(&amp;mut self.mbc);
+    self.ppu.exec(&amp;mut self.mbc);
+  }
+}
+
+</code></pre>
+<p>こんなかんじになるのかもしれない。不要な時は無駄に引き回したりせずに、必要な時に必要な権限を与えてあげるということを徹底するといいのかもしれない。俺はこの程度のこともわからんかったんだな。。。結局<a href="https://github.com/kmtoki/gbgb">Typescriptで書いたGBE</a>は上側の構造体になっている。</p>
+<p><a href="https://github.com/tanakh/tgbr/blob/master/tgbr-core/src/cpu.rs">たなこふ先生のCPUのマクロ</a>は狂気じみてるが、しこしこ手で書いていた僕も書きながらマクロでなんとかなりそうだなとか思いながらTS書いてたな。ここまでショートカットできるなんて思いもしなかったので怖い。</p>
+
+
+</div>

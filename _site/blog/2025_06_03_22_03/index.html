@@ -1,0 +1,60 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2025/06/03 22:03</p>
+  <hr>
+  <h2 class="post-title">Vimscriptでマルチバイト文字数を数える</h2>
+</div>
+
+<div class="post-main">
+
+  <p>前回見事chatGPT先生の嘘を鵜呑みにして間違えたのをアップしてたので訂正。</p>
+<pre><code class="language-vimscript">function! GetTotalUtf8CharCount()
+  let total_chars = 0
+  let num_lines = line('$')
+
+  for i in range(1, num_lines)
+    let line_content = getline(i)
+    let total_chars += len(line_content) &quot; ちゃうぞ
+  endfor
+
+  return total_chars
+endfunction
+</code></pre>
+<p>というコード片を乗せたのだが、<code>len()</code>はマルチバイト対応してなくて、使うべきは<code>strchars()</code>でした</p>
+
+
+</div>

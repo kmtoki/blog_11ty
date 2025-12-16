@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2025/05/25 21:21</p>
+  <hr>
+  <h2 class="post-title">text length</h2>
+</div>
+
+<div class="post-main">
+
+  <p>最近の日記には文字数を最後に書いているのだが、その文字数の数え方はこれを書いているNeovimの<code>g Ctrl-g</code>コマンドで出てくるやつを採用しているわけだが、なんか多くねと思って。</p>
+<ul>
+<li>今日の日記の文字数は
+<ul>
+<li>neovim: 2852
+<ul>
+<li><code>g C-g</code></li>
+</ul>
+</li>
+<li>ruby: 2803
+<ul>
+<li>``ruby -e 'p readlines(nil)[0].length'<code> FILE</code></li>
+</ul>
+</li>
+<li>pwsh: 2754
+<ul>
+<li><code>$a=0;cat FILE | % { $a=$a+$_.length}; echo $a</code></li>
+</ul>
+</li>
+<li>node: 2852
+<ul>
+<li><code>fs.readFileSync(FILE).toString().length</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>なんで違うん。わかりません。</p>
+
+
+</div>

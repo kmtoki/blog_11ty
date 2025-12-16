@@ -1,0 +1,250 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>bercriber's blog</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="icon" href="/public/favicon.ico" />
+    
+  </head>
+  <body>
+    
+      <header class="header">
+        <h2 class="header-title">Bercriber's Blog</h2>
+        <img class="header-icon" src="/public/bercriber.jpg" />
+      </header>
+    
+
+    
+    
+  </body>
+</html>
+
+
+<div class="tags-list">
+
+
+  
+    <a class="tags-list-elem" href="/blog/tag/プログラミング">プログラミング</a>
+  
+
+</div>
+
+
+
+
+<div class="post-header">
+  <p class="post-date">2021/01/06 11:14</p>
+  <hr>
+  <h2 class="post-title">自作ゲームボーイエミュレータメモ</h2>
+</div>
+
+<div class="post-main">
+
+  <p>正直なところエミュレータを完成させていないし、完成しない気もしているので理解がいろいろとおかしいところもあるかと思うので基本的には元資料見ていただくのが正解かと。</p>
+<p><img src="https://cdn-ak.f.st-hatena.com/images/fotolife/b/bercriber/20210105/20210105195138.png" alt="" title="undefined"></p>
+<p>(ターミナルでもグラフィックのデバッグできたりします)</p>
+<h1>資料</h1>
+<ul>
+<li>
+<p><a href="https://archive.org/details/GameBoyProgManVer1.1">Gameboy Development Manual V1.1</a></p>
+<ul>
+<li>コンフィデンシャルな公式マニュアル</li>
+</ul>
+</li>
+<li>
+<p><a href="https://gbdev.io/pandocs/">gbdev.io</a></p>
+<ul>
+<li>
+<p>包括的なメイン資料</p>
+</li>
+<li>
+<p>その<a href="https://github.com/gbdev/pandocs">github</a></p>
+</li>
+<li>
+<p>現在でも結構コミットされてる</p>
+</li>
+<li>
+<p>英語圏だが<a href="https://gbdev.io/chat.html">Discordなど</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<p>のチャットコミュニティも活発</p>
+<ul>
+<li>
+<p><a href="http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf">GBCPUman.pdf</a></p>
+<ul>
+<li>CPUの命令はこれを主に参考にした</li>
+</ul>
+</li>
+<li>
+<p><a href="/http://www.zilog.com/docs/z80/um0080.pdf">z80のマニュアル</a></p>
+<ul>
+<li>ゲームボーイのCPUはz80をだいぶ簡素化した感じらしい</li>
+<li>困ったときはこっちと見比べた</li>
+</ul>
+</li>
+<li>
+<p><a href="https://github.com/retrio/gb-test-roms/tree/master">テストROM</a></p>
+</li>
+<li>
+<p><a href="http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings">GameBoy-Emulation-in-JavaScript:-GPU-Timings</a></p>
+<ul>
+<li>PPUの実装の参考にした</li>
+</ul>
+</li>
+<li>
+<p><a href="https://gekkio.fi/files/gb-docs/gbctr.pdf">Game Boy: Complete Technical Reference</a></p>
+<ul>
+<li>MBCについてわかりやすい</li>
+<li>こちらもメンテされてる</li>
+</ul>
+</li>
+</ul>
+<h1>ざっくり</h1>
+<p>上記の<a href="https://gbdev.io/pandocs/">gbdev.io</a></p>
+<p>を見てもらえば特に説明することないんだけど、簡単に。
+ゲームボーイエミュレータは主に以下で考えればよい。</p>
+<ul>
+<li>
+<p>Memory</p>
+</li>
+<li>
+<p>CPU</p>
+<ul>
+<li>8-bit Sharp LR35902</li>
+</ul>
+</li>
+<li>
+<p>PPU (Picture Processing Unit)</p>
+<ul>
+<li>グラフィックスはGPUとは言わずPPUと言うらしい</li>
+<li>ファミコンなんかではPPUやAPUがCPUとは別々のプロセッサだった</li>
+<li>ゲームボーイではCPUもPPUもAPUもワンチップらしい。</li>
+</ul>
+</li>
+<li>
+<p>APU (Audio Processing Unit)</p>
+<ul>
+<li>音楽</li>
+</ul>
+</li>
+<li>
+<p>MBC (Memory Bank Controller)</p>
+<ul>
+<li>メインメモリが0xFFFFまでしかアドレス空間がないのを拡張的に扱う物</li>
+</ul>
+</li>
+<li>
+<p>ROM (ポケモンなどのゲームカセット)</p>
+</li>
+<li>
+<p>Log</p>
+<ul>
+<li>ログはないとまったくデバッグできないので最初から実装すべし</li>
+</ul>
+</li>
+<li>
+<p>Display</p>
+<ul>
+<li>ディスプレイはお好みのGUIライブラリで描写</li>
+<li>最初はターミナルでアスキーアート的にやってもいいと思う</li>
+</ul>
+</li>
+</ul>
+<h2>CPU</h2>
+<p>8ビットのレジスタがA,F,B,C,D,E,H,L</p>
+<p>16ビットのレジスタがAF,BC,DE,HL,SP(Stack Pointer),PC(Program Counter)</p>
+<p>AF,BC,DE,HLは8ビットのレジスタ二つを並べて疑似的に16ビットレジスタとして扱っている。</p>
+<p>BCはBとCで、BC=0xABCDとすれば、B=0xAB、C=0xCDとなる。</p>
+<p>AとFは特殊でAはアキュムレーターとして、Fはフラグとしても扱われる。</p>
+<p>フラグはZero,Negative,Half Carry,Carryの4つ</p>
+<pre><code>F:11110000
+  |||+-&gt; Carry
+  ||+-&gt; Half Carry
+  |+-&gt; Negative
+  +-&gt; Zero
+</code></pre>
+<ul>
+<li>Zeroは演算結果が0だった場合に1になる。</li>
+<li>Negativeは引き算を使ったときなどに1になる。</li>
+<li>Half Carryは4ビット目が繰り上がったときなどに1になる。</li>
+<li>Carryは8ビット目が繰り上がったときなどに１になる。</li>
+</ul>
+<p>命令のクロック数は全体を同期するときに重要。</p>
+<h4>割り込み、Interrupts</h4>
+<p>割り込みは主にV-Blank、LCD STAT、Timer、Serial、Joypadの5種類。</p>
+<ul>
+<li>V-BlankはPPUが画面の書き込み操作が一定以上完了した時にオンになる。</li>
+<li>LCD STATはPPUによって４種類ほど割り込みのタイミングが設定でき、それによってオンになる。</li>
+<li>TimerはTACで設定したクロックのタイミングによってオンになる。</li>
+<li>Serialはケーブル接続時のゲームボーイtoゲームボーイのシリアル通信に完了時にオンになる。</li>
+<li>Joypadはプレイヤーによるコントローラーの操作時にオンになる。</li>
+</ul>
+<p>IME,IE(0xFFFF),IF(0xFF0F)の三つのレジスタで操作される。</p>
+<ul>
+<li>IMEはInterrupt Master Enable Flagであり、すべての割り込みのオン、オフを決める。</li>
+<li>IEはInterrupt Enableで、個別の割り込みのオン、オフを操作できる。</li>
+<li>IFはInterrupt Flagで、個別に割り込みをリクエストすることができる。
+三つのフラグがあり、ややこしい。</li>
+</ul>
+<h4>タイマー、Timer</h4>
+<p>DIV(0xFF04),TIMA(0xFF05),TMA(0xFF06),TAC(0xFF07)のレジスタによって操作される。</p>
+<ul>
+<li>
+<p>TACはタイマーコントロール。タイマーのオン、オフとタイマーの周期を4種類設定できる。</p>
+</li>
+<li>
+<p>DIVはタイマーのオンオフ関係なく16384hz周期でインクリメントされる。8ビットなので0xff超えると0になる。</p>
+<ul>
+<li>DIVの16384hzというのはゲームボーイのクロックが4194304hzで、4194304/16384=256(0xFF)からなんじゃないかと。</li>
+</ul>
+</li>
+<li>
+<p>TIMAはタイマーカウンター。TACで設定した周期でインクリメントされる。</p>
+<ul>
+<li>オーバーフローすると割り込みのフラグを立てる。</li>
+</ul>
+</li>
+<li>
+<p>TMAはTIMAはオーバーフローしたときにTIMAにセットする値。</p>
+</li>
+</ul>
+<h2>PPU</h2>
+<p>下から順にBackground、Window、Spritesとレイヤーになっている。</p>
+<p>スプライトないしタイルという単位でキャラクターや背景や文字などが管理されている。</p>
+<p>スプライトはOAM(Object Attribute Tabe)で位置や向きなどが設定される。</p>
+<p><img src="https://gbdev.io/pandocs/imgs/game-boy-lcd-refresh-diagram-2.svg" alt="LCD Display Timing" title="undefined"></p>
+<p>ディスプレイはlineごとに描写される。</p>
+<p>lineごとにOAMからスプライト検索し、書き込み、H-Blankに入る。</p>
+<p>144lineでV-Blankに入る。</p>
+<p>STAT(0xFF41)で設定されていれば、OAM検索時、H-Blank時、V-Blank時に割り込みフラグが立つ。</p>
+<p>ラインごとに描写するのは実装が難しいので、CPUと同期をとってフラグ管理だけ進めていき、</p>
+<p>最後にまとめて描写するのが簡単な実装になるのではないかと思う。</p>
+<h2>APU</h2>
+<p>手付かずにつき、省略。</p>
+<h2>MBC</h2>
+<p><a href="https://gekkio.fi/files/gb-docs/gbctr.pdf">Game Boy: Complete Technical Reference</a></p>
+<p>が分かりやすい。</p>
+<p>ゲームボーイのメインメモリは1Byteが0xFFFF個しか乗らないし、PCも16ビットで0xffffまでしか数えられない。</p>
+<p>ROMによっては1.5MBまであり、バンクと言う概念を使い、これらにアクセスしていく。</p>
+<p>MBCにもいくつか種類がある。ROMによってMBCが変わってくる。</p>
+<p>たとえば、ゼルダの伝説 夢を見る島であればMBC1。ポケットモンスター 赤であればMBC3。</p>
+<p>MBC1であれば、メインメモリの0x0000-0x3fffがROM Bank1、0x4000-0x7fffがROM Bank2、</p>
+<p>0xa000-0xbfffにRAM Bankのコントロールレジスタがある。</p>
+<p>やたら範囲が広いがたいてい一か所に書き込まれるだけのような気がするがわからん。</p>
+<p>アドレス0x0000-0x3fffにBank 0、0x4000-0x7fffにBank Nが配置される。</p>
+<p>こんな感じでアドレスを組み立てていく。</p>
+<pre><code class="language-js">// Read Bank N
+let i = (bank2 &lt;&lt; 19) | (bank1 &lt;&lt; 14) | (index - 0x4000);
+cartridge.rom[i];
+</code></pre>
+<p>個人的つまづきポイントとして、0x0000-0xbfffにMBCの設定レジスタが配置されることになっているのに、</p>
+<p>0x0000-0x7fffのアドレスからどのようにROMの内容を読みだすのか混乱した。</p>
+<p>これは、MBCを通した0x0000-0x7fffの読み込みの時はROMから読んで、0x0000-0xbfffに書き込むときはメモリに書き込む。</p>
+<p>つまり、ReadとWriteは別の場所にそれぞれ行われている。</p>
+<p>メインメモリに両方とも展開されていると思い込んでいたのが混乱した要因だった。</p>
+
+
+</div>
