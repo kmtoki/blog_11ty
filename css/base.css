@@ -63,8 +63,8 @@ a {
 }
 
 .post-list {
-  display: flex;
-  align-items: center;
+  margin: 5%;
+  text-align: center;
   gap: 3%;
 }
 
