@@ -65,7 +65,7 @@ a {
 .post-list {
   display: flex;
   align-items: center;
-  gap: 1%;
+  gap: 3%;
 }
 
 .post-title {
@@ -74,7 +74,6 @@ a {
 }
 
 .post-title a {
-  padding: 10px;
   text-decoration: none; 
   color: #666666;
 }
@@ -87,7 +86,7 @@ a {
 .post-date {
   color: #888888;
   flex: 0 0;
-  flex-basis: max-content;
+  flex-basis: min-content;
 }
 
 .tags-list {
@@ -95,6 +94,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 1%;
 }
 
