@@ -6,11 +6,11 @@ permalink: "/blog/"
 {% assign tags = collections | getTagNames %}
 {% render "tag_list.html" with tags as tags %}
 
-{% assign posts = collections.all | reverse | slice: 0, 9 %}
+{% assign posts = collections.all | reverse | slice: 0, 29 %}
 {% render "post_list.html" with posts as posts %}
 
 
 <hr>
 <div class="pages">
-  <h2><a href="/blog/pages/0">Pages</a></h2>
+  <h2><a href="/blog/pages/1">...</a></h2>
 </div>

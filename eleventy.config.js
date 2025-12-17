@@ -9,7 +9,6 @@ export default function (eleventyConfig) {
 }
 
 export const config = {
-  pathPrefix: "/blog_11ty/",
 	dir: {
 		input: "content",
 	},

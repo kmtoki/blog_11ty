@@ -18,20 +18,45 @@ a {
   gap: 2%;
 }
 
-.header-title {
+.header-title a {
   color: #444444;
+  text-decoration: none;
 }
 
 .header-icon {
   align-self: center;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
 }
 
 .header hr {
   margin: 0 5%;
 }
+
+.profile {
+  text-align: center;
+  margin: 0 auto;
+  width: 300px;
+}
+
+.profile-icon {
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+}
+
+.profile a {
+  color: #333333;
+  text-decoration: none;
+}
+
+.profile h2 { 
+  text-align: center;
+  color: #333333;
+  text-decoration: none;
+}
+
 
 
 .content {
