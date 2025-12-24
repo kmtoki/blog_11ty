@@ -1,4 +1,5 @@
 ---
+eleventyExcludeFromCollections: true
 permalink: "/blog/"
 ---
 {% render "base.html" %}
@@ -6,11 +7,25 @@ permalink: "/blog/"
 {% assign tags = collections | getTagNames %}
 {% render "tag_list.html" with tags as tags %}
 
-{% assign posts = collections.all | reverse | slice: 0, 29 %}
-{% render "post_list.html" with posts as posts %}
+{% assign posts = collections.all | reverse | slice: 0, 26 %}
 
+{% for post in posts %}
+  {% if post.data.title %}
+    <div class="post-header">
+      <p class="post-date">{{post.data.date | date: "%Y/%m/%d %H:%M", 0}}</p>
+      <hr>
+      <h2 class="post-title">{{post.data.title}}</h2>
+    </div>
+
+    <div class="post-main">
+      {{post.content}}
+    </div>
+    <br>
+  {% endif %}
+{% endfor %}
 
 <br>
 <div class="pages">
   <h2><a href="/blog/pages/1">...</a></h2>
 </div>
+

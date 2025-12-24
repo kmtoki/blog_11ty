@@ -1,10 +1,11 @@
 ---
+eleventyExcludeFromCollections: true
 pagination:
   data: collections.all
   size: 28
   alias: posts
   reverse: true
-permalink: "/blog/pages/{{ pagination.pageNumber }}/"
+permalink: "/blog/list/{{ pagination.pageNumber }}/"
 ---
 
 {% render "base.html" %}

@@ -1,6 +1,6 @@
-{% include "base.html" %}
+{% render "base.html" %}
 
-{% include "tag_list.html" %}
+{% render "tag_list.html" with tags as tags %}
 
 <div class="post-header">
   <p class="post-date">{{date | date: "%Y/%m/%d %H:%M", 0}}</p>
