@@ -2,7 +2,7 @@
 eleventyExcludeFromCollections: true
 pagination:
   data: collections.all
-  size: 28
+  size: 10
   alias: posts
   reverse: true
 permalink: "/blog/page/{{ pagination.pageNumber }}/"
@@ -13,7 +13,20 @@ permalink: "/blog/page/{{ pagination.pageNumber }}/"
 {% assign tags = collections | getTagNames %}
 {% render "tag_list.html" with tags as tags %}
 
-{% render "post_list.html" with posts  as posts %}
+{% for post in posts %}
+  {% if post.data.title %}
+    <div class="post-header">
+      <p class="post-date">{{post.data.date | date: "%Y/%m/%d %H:%M", 0}}</p>
+      <hr>
+      <h2 class="post-title"><a href={{post.url}}>{{post.data.title}}</a></h2>
+    </div>
+
+    <div class="post-main">
+      {{post.content}}
+    </div>
+    <br>
+  {% endif %}
+{% endfor %}
 
 {% assign n = pagination.pageNumber %}
 <br>
